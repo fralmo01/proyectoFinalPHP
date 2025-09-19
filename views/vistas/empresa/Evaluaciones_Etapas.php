@@ -1,5 +1,40 @@
 <?php if (session_status() === PHP_SESSION_NONE)
     session_start(); ?>
+<?php
+if (!function_exists('preparar_ruta_publica')) {
+    function preparar_ruta_publica(?string $ruta, string $prefijo = 'public/'): string
+    {
+        if (empty($ruta)) {
+            return '';
+        }
+
+        $ruta = trim($ruta);
+        if ($ruta === '') {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $ruta)) {
+            return $ruta;
+        }
+
+        $rutaNormalizada = ltrim($ruta, '/');
+        $segmentos = array_map('rawurlencode', array_filter(explode('/', $rutaNormalizada), 'strlen'));
+        $rutaCodificada = implode('/', $segmentos);
+
+        if ($prefijo === '') {
+            return $rutaCodificada;
+        }
+
+        $prefijoNormalizado = rtrim($prefijo, '/') . '/';
+
+        if (strpos($rutaCodificada, 'public/') === 0 || strpos($rutaCodificada, $prefijoNormalizado) === 0) {
+            return $rutaCodificada;
+        }
+
+        return $prefijoNormalizado . $rutaCodificada;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -8,34 +43,15 @@
     <title>Gestión de Evaluaciones por Etapa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        body {
-            background: transparent;
-        }
-
-        .container {
-            position: relative;
-            z-index: 1;
-            margin-top: 40px;
-            /* espacio superior */
-        }
-
-        .card {
-            border-radius: 0.75rem;
-        }
-
-        .card-header {
-            font-weight: 600;
-        }
-    </style>
 </head>
 
 <body>
     <?php include __DIR__ . "/../../layout/fondo.php"; ?>
+    <?php include __DIR__ . "/../../layout/menu_empresa.php"; ?>
 
-    <div class="container">
+    <div class="container mt-5 pt-5" style="position: relative; z-index: 1;">
         <div class="d-flex align-items-center mb-4">
-            <a href="index.php?controller=Evaluacion&action=listar" class="btn btn-outline-primary me-3">
+            <a href="index.php?controller=Evaluacion&action=listar" class="btn btn-link text-decoration-none me-3">
                 <i class="fas fa-arrow-left"></i> Volver al panel
             </a>
             <div>
@@ -59,13 +75,37 @@
 
         <?php if (!empty($detalle)): ?>
             <div class="row g-4">
-                <!-- Datos del postulante -->
+                <!-- Panel de datos del postulante -->
                 <div class="col-lg-5">
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-white">
                             <h5 class="mb-0"><i class="fas fa-user-tie text-success me-2"></i>Datos del postulante</h5>
                         </div>
                         <div class="card-body">
+                            <?php
+                            $fotoPerfil = $detalle['fotoPerfil'] ?? '';
+                            $rutaFoto = '';
+                            if (!empty($fotoPerfil)) {
+                                if (preg_match('/^https?:\/\//i', $fotoPerfil)) {
+                                    $rutaFoto = $fotoPerfil;
+                                } else {
+                                    $segmentosFoto = array_map('rawurlencode', array_filter(explode('/', ltrim($fotoPerfil, '/')), 'strlen'));
+                                    $rutaFoto = 'public/fotos/' . implode('/', $segmentosFoto);
+                                }
+                            }
+                            ?>
+                            <?php if (!empty($rutaFoto)): ?>
+                                <div class="text-center mb-3">
+                                    <img src="<?= htmlspecialchars($rutaFoto) ?>" alt="Foto del postulante"
+                                        class="img-thumbnail" style="max-width: 180px;">
+                                </div>
+                            <?php else: ?>
+                                <div class="text-center mb-3 text-muted">
+                                    <i class="fas fa-user-circle fa-4x"></i>
+                                    <div class="small">Sin foto disponible</div>
+                                </div>
+                            <?php endif; ?>
+
                             <p class="mb-2">
                                 <strong>Postulante:</strong><br><?= htmlspecialchars(trim($detalle['postulante'])) ?></p>
                             <p class="mb-2">
@@ -84,18 +124,89 @@
                             <p class="mb-2">
                                 <strong>Correo:</strong><br><?= htmlspecialchars($detalle['email'] ?? 'No registrado') ?>
                             </p>
-                            <p class="mb-0">
+                            <p class="mb-2">
                                 <strong>Teléfono:</strong><br><?= htmlspecialchars($detalle['telefono'] ?? 'No registrado') ?>
                             </p>
+
+                            <!-- Último CV -->
+                            <?php $cvRutaOriginal = $detalle['cvRuta'] ?? ''; ?>
+                            <p class="mb-0"><strong>Currículum Vitae más reciente:</strong><br>
+                                <?php if (!empty($cvRutaOriginal)): ?>
+                                    <?php
+                                    $cvRutaDescarga = preparar_ruta_publica($cvRutaOriginal);
+                                    if ($cvRutaDescarga !== '' && !preg_match('/^https?:\/\//i', $cvRutaDescarga)) {
+                                        $cvRutaDescarga = '/' . ltrim($cvRutaDescarga, '/');
+                                    }
+                                    ?>
+                                    <a href="<?= htmlspecialchars($cvRutaDescarga) ?>" target="_blank" class="link-primary">
+                                        <i class="fas fa-file-lines me-1"></i>Ver CV</a>
+                                <?php else: ?>
+                                    <span class="text-muted">No disponible</span>
+                                <?php endif; ?>
+                            </p>
+
+                            <!-- Todos los CVs -->
+                            <div class="mt-3">
+                                <strong>Currículum Vitae cargados:</strong>
+                                <?php if (!empty($documentosCV)): ?>
+                                    <div class="table-responsive mt-2">
+                                        <table class="table table-sm table-hover align-middle mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Archivo</th>
+                                                    <th>Ruta</th>
+                                                    <th class="text-end">Fecha</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($documentosCV as $documento): ?>
+                                                    <?php
+                                                    $rutaOriginalCV = $documento['rutaArchivo'] ?? '';
+                                                    $rutaNormalizada = preparar_ruta_publica($rutaOriginalCV, 'public/');
+                                                    if ($rutaNormalizada !== '' && !preg_match('/^https?:\/\//i', $rutaNormalizada)) {
+                                                        $rutaNormalizada = '/' . ltrim($rutaNormalizada, '/');
+                                                    }
+                                                    $fechaDocumento = $documento['fechaActualizacion'] ?: $documento['fechaSubida'];
+                                                    $fechaFormateada = $fechaDocumento ? date('d/m/Y H:i', strtotime($fechaDocumento)) : null;
+                                                    ?>
+                                                    <tr>
+                                                        <td>
+                                                            <a href="<?= htmlspecialchars($rutaNormalizada) ?>" target="_blank"
+                                                                class="link-secondary">
+                                                                <i
+                                                                    class="fas fa-file-arrow-down me-2"></i><?= htmlspecialchars(basename($rutaOriginalCV)) ?>
+                                                            </a>
+                                                        </td>
+                                                        <td class="small text-muted"><?= htmlspecialchars($rutaNormalizada) ?></td>
+                                                        <td class="text-end">
+                                                            <?php if ($fechaFormateada): ?>
+                                                                <span class="badge bg-light text-muted">
+                                                                    <i
+                                                                        class="fas fa-clock me-1"></i><?= htmlspecialchars($fechaFormateada) ?>
+                                                                </span>
+                                                            <?php else: ?>
+                                                                <span class="badge bg-light text-muted"><i
+                                                                        class="fas fa-clock me-1"></i>Sin fecha</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <p class="text-muted small mb-0">No hay CV registrados para el postulante.</p>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Formularios -->
+                <!-- Panel derecho -->
                 <div class="col-lg-7">
                     <!-- Registrar evaluación -->
                     <div class="card shadow-sm border-0 mb-4" id="form-evaluacion">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-white">
                             <h5 class="mb-0"><i class="fas fa-clipboard text-success me-2"></i>Registrar evaluación</h5>
                         </div>
                         <div class="card-body">
@@ -104,13 +215,11 @@
                                 <input type="hidden" name="accion" value="registrar_evaluacion">
                                 <div class="mb-3">
                                     <label class="form-label">Puntaje obtenido</label>
-                                    <input type="number" name="puntaje" class="form-control" min="0" step="0.01"
-                                        placeholder="Ej. 85.50" required>
+                                    <input type="number" name="puntaje" class="form-control" min="0" step="0.01" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Observaciones</label>
-                                    <textarea name="observaciones" class="form-control" rows="3"
-                                        placeholder="Notas sobre la evaluación"></textarea>
+                                    <textarea name="observaciones" class="form-control" rows="3"></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Guardar
                                     evaluación</button>
@@ -120,9 +229,8 @@
 
                     <!-- Cambiar etapa -->
                     <div class="card shadow-sm border-0 mb-4" id="form-etapa">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-white">
                             <h5 class="mb-0"><i class="fas fa-route text-primary me-2"></i>Cambiar etapa</h5>
-                            <small class="text-muted">Selecciona la etapa a la que avanzará el postulante.</small>
                         </div>
                         <div class="card-body">
                             <?php if (!empty($etapasPosteriores)): ?>
@@ -150,15 +258,14 @@
 
                     <!-- Decisión final -->
                     <div class="card shadow-sm border-0" id="form-resultado">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-white">
                             <h5 class="mb-0"><i class="fas fa-gavel text-dark me-2"></i>Decisión final</h5>
-                            <small class="text-muted">Define el resultado final del proceso.</small>
                         </div>
                         <div class="card-body">
                             <form method="post"
                                 action="index.php?controller=Evaluacion&action=detalle&idPostulacion=<?= (int) $detalle['idPostulacion'] ?>">
                                 <input type="hidden" name="accion" value="guardar_resultado">
-                                <div class="row g-3 align-items-end">
+                                <div class="row g-3">
                                     <div class="col-md-8">
                                         <label class="form-label">Estado del resultado</label>
                                         <select name="idEstadoResultado" class="form-select" required>
@@ -191,9 +298,7 @@
                         </div>
                         <div class="card-body">
                             <?php
-                            $historialEtapas = array_filter($historialAcciones, function ($accion) {
-                                return stripos($accion['accion'] ?? '', 'etapa') !== false;
-                            });
+                            $historialEtapas = array_filter($historialAcciones, fn($accion) => stripos($accion['accion'] ?? '', 'etapa') !== false);
                             ?>
                             <?php if (!empty($historialEtapas)): ?>
                                 <ul class="list-group list-group-flush">
@@ -212,13 +317,13 @@
                                     <?php endforeach; ?>
                                 </ul>
                             <?php else: ?>
-                                <p class="text-muted mb-0">Aún no hay registros de cambios de etapa para este postulante.</p>
+                                <p class="text-muted mb-0">Aún no hay registros de cambios de etapa.</p>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
-
                 <div class="col-lg-6">
+                    <!-- Evaluaciones -->
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-white">
                             <h5 class="mb-0"><i class="fas fa-star text-warning me-2"></i>Evaluaciones registradas</h5>
@@ -252,23 +357,24 @@
                                     </table>
                                 </div>
                             <?php else: ?>
-                                <p class="text-muted mb-0">No se han registrado evaluaciones para esta postulación.</p>
+                                <p class="text-muted mb-0">No se han registrado evaluaciones.</p>
                             <?php endif; ?>
                         </div>
                     </div>
 
+                    <!-- Resultado -->
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white">
                             <h5 class="mb-0"><i class="fas fa-flag-checkered text-success me-2"></i>Resultado final</h5>
                         </div>
                         <div class="card-body">
                             <?php if (!empty($resultado)): ?>
-                                <p class="mb-2"><strong>Estado:</strong> <span
+                                <p><strong>Estado:</strong> <span
                                         class="badge bg-dark"><?= htmlspecialchars($resultado['estado']) ?></span></p>
-                                <p class="mb-0 text-muted"><i class="fas fa-clock me-1"></i>Registrado el
+                                <p class="text-muted mb-0"><i class="fas fa-clock me-1"></i>Registrado el
                                     <?= htmlspecialchars(date('d/m/Y H:i', strtotime($resultado['fechaResultado']))) ?></p>
                             <?php else: ?>
-                                <p class="text-muted mb-0">Aún no se ha definido un resultado final para esta postulación.</p>
+                                <p class="text-muted mb-0">Aún no se ha definido un resultado final.</p>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -283,4 +389,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

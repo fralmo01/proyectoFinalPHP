@@ -24,7 +24,7 @@ class Evaluacion
                     r.idResultado,
                     r.idEstadoResultado,
                     er.nombre AS estadoResultado
-                    FROM Postulaciones p
+                FROM Postulaciones p
                 INNER JOIN Convocatorias c ON p.idConvocatoria = c.idConvocatoria
                 INNER JOIN Usuarios u ON p.idUsuario = u.idUsuario
                 LEFT JOIN Etapas et ON p.idEtapa = et.idEtapa
@@ -38,7 +38,7 @@ class Evaluacion
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-public function perteneceAEmpresa(int $idPostulacion, int $idEmpresa): bool
+    public function perteneceAEmpresa(int $idPostulacion, int $idEmpresa): bool
     {
         $sql = "SELECT COUNT(*) AS total
                 FROM Postulaciones p
@@ -64,7 +64,18 @@ public function perteneceAEmpresa(int $idPostulacion, int $idEmpresa): bool
                     et.nombre AS etapa,
                     CONCAT(IFNULL(u.nombre, ''), ' ', IFNULL(u.apellidoPaterno, ''), ' ', IFNULL(u.apellidoMaterno, '')) AS postulante,
                     u.email,
-                    u.telefono
+                    u.telefono,
+                    u.fotoPerfil,
+                    (
+                        SELECT d.rutaArchivo
+                        FROM Documentos d
+                        INNER JOIN TipoDocumentos td ON td.idTipoDocumento = d.idTipoDocumento
+                        WHERE d.idUsuario = u.idUsuario
+                          AND td.nombreTipoDocumento = 'Currículum Vitae'
+                          AND d.estado = 1
+                        ORDER BY d.fechaActualizacion DESC, d.fechaSubida DESC
+                        LIMIT 1
+                    ) AS cvRuta
                 FROM Postulaciones p
                 INNER JOIN Convocatorias c ON p.idConvocatoria = c.idConvocatoria
                 INNER JOIN Usuarios u ON p.idUsuario = u.idUsuario
@@ -76,6 +87,25 @@ public function perteneceAEmpresa(int $idPostulacion, int $idEmpresa): bool
         $stmt->execute([$idPostulacion]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
         return $data ?: null;
+    }
+
+    public function obtenerDocumentosUsuarioPorTipo(int $idUsuario, string $tipoDocumento): array
+    {
+        $sql = "SELECT
+                    d.idDocumento,
+                    d.rutaArchivo,
+                    d.fechaSubida,
+                    d.fechaActualizacion
+                FROM Documentos d
+                INNER JOIN TipoDocumentos td ON td.idTipoDocumento = d.idTipoDocumento
+                WHERE d.idUsuario = ?
+                  AND td.nombreTipoDocumento = ?
+                  AND d.estado = 1
+                ORDER BY d.fechaActualizacion DESC, d.fechaSubida DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$idUsuario, $tipoDocumento]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function registrarEvaluacion(int $idPostulacion, float $puntaje, ?string $observaciones, int $idUsuario): int
@@ -229,3 +259,4 @@ public function perteneceAEmpresa(int $idPostulacion, int $idEmpresa): bool
 }
 
 ?>
+

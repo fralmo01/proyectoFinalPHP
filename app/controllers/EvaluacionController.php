@@ -75,6 +75,7 @@ class EvaluacionController
         $etapas = $this->evaluacionModel->obtenerEtapas();
         $etapasPosteriores = $detalle ? $this->evaluacionModel->obtenerEtapasPosteriores((int)$detalle['idEtapa']) : [];
         $estadosResultado = $this->evaluacionModel->obtenerEstadosResultado();
+        $documentosCV = $detalle ? $this->evaluacionModel->obtenerDocumentosUsuarioPorTipo((int)$detalle['idUsuario'], 'Currículum Vitae') : [];
         $mensajes = $this->obtenerMensajesDeSesion();
 
         require_once __DIR__ . '/../../views/vistas/empresa/Evaluaciones_Etapas.php';
@@ -247,3 +248,5 @@ class EvaluacionController
         return $mensajes;
     }
 }
+
+
