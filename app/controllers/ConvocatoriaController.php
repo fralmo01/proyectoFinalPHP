@@ -53,4 +53,30 @@ class ConvocatoriaController
             exit;
         }
     }
+
+
+
+    
+
+    public function listarPorEmpresa()
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (empty($_SESSION['idEmpresa'])) {
+            header("Location: index.php");
+            exit;
+        }
+
+        require_once __DIR__ . '/../models/Postulacion.php';
+        $postulacionModel = new Postulacion();
+        $solicitudes = $postulacionModel->listarPorEmpresa($_SESSION['idEmpresa']);
+
+        require_once __DIR__ . '/../../views/vistas/empresa/lista_solicitud.php';
+    }
+
+
+
+
+
+
 }

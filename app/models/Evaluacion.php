@@ -1,52 +1,45 @@
 <?php
 require_once __DIR__ . '/../core/Database.php';
 
-class Postulacion {
+class Evaluacion
+{
     private $pdo;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->pdo = Database::getInstance();
     }
 
-    public function postular($idUsuario, $idConvocatoria, $comentario = "") {
-        $sql = "CALL sp_postular(?, ?, ?, ?)";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$idUsuario, $idConvocatoria, $comentario, $idUsuario]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function listarPorUsuario($idUsuario) {
-        $sql = "CALL sp_listar_postulaciones_usuario(?)";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$idUsuario]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-
-    public function listarPorEmpresa($idEmpresa) {
+    public function listarPorEmpresa($idEmpresa)
+    {
         $sql = "SELECT 
+                    e.idEvaluacion,
+                    e.puntaje,
+                    e.observaciones,
+                    e.fechaEvaluacion,
                     p.idPostulacion,
                     p.fechaPostulacion,
-                    p.comentario,
                     c.titulo AS convocatoria,
                     CONCAT(IFNULL(u.nombre, ''), ' ', IFNULL(u.apellidoPaterno, ''), ' ', IFNULL(u.apellidoMaterno, '')) AS postulante,
                     u.email,
                     u.telefono,
-                    et.nombre AS etapa
-                FROM Postulaciones p
+                    et.nombre AS etapa,
+                    r.fechaResultado,
+                    er.nombre AS estadoResultado
+                FROM Evaluaciones e
+                INNER JOIN Postulaciones p ON e.idPostulacion = p.idPostulacion
                 INNER JOIN Convocatorias c ON p.idConvocatoria = c.idConvocatoria
                 INNER JOIN Usuarios u ON p.idUsuario = u.idUsuario
                 LEFT JOIN Etapas et ON p.idEtapa = et.idEtapa
+                LEFT JOIN Resultados r ON p.idPostulacion = r.idPostulacion
+                LEFT JOIN EstadoResultados er ON r.idEstadoResultado = er.idEstadoResultado
                 WHERE c.idEmpresa = ?
-                ORDER BY p.fechaPostulacion DESC";
+                ORDER BY e.fechaEvaluacion DESC";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$idEmpresa]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
-
 }
-?>
 
+?>
