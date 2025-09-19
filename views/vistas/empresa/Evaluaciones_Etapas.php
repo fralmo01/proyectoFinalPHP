@@ -17,6 +17,18 @@ if (!function_exists('preparar_ruta_publica')) {
             return $ruta;
         }
 
+        $ruta = str_replace('\\', '/', $ruta);
+
+        if (preg_match('/^[A-Za-z]:\//', $ruta)) {
+            $ruta = substr($ruta, 3);
+        }
+
+        $ruta = ltrim($ruta, '/');
+
+        if (($posPublic = stripos($ruta, 'public/')) !== false) {
+            $ruta = substr($ruta, $posPublic);
+        }
+
         $rutaNormalizada = ltrim($ruta, '/');
         $segmentos = array_map('rawurlencode', array_filter(explode('/', $rutaNormalizada), 'strlen'));
         $rutaCodificada = implode('/', $segmentos);
@@ -26,6 +38,18 @@ if (!function_exists('preparar_ruta_publica')) {
         }
 
         $prefijoNormalizado = rtrim($prefijo, '/') . '/';
+
+        if ($rutaCodificada !== '') {
+            $prefijoSegmentos = array_filter(explode('/', trim($prefijoNormalizado, '/')));
+            if (!empty($prefijoSegmentos)) {
+                $ultimoPrefijo = end($prefijoSegmentos);
+                $rutaSegmentos = explode('/', $rutaCodificada);
+                if (!empty($rutaSegmentos) && strcasecmp($rutaSegmentos[0], $ultimoPrefijo) === 0) {
+                    array_shift($rutaSegmentos);
+                    $rutaCodificada = implode('/', $rutaSegmentos);
+                }
+            }
+        }
 
         if (strpos($rutaCodificada, 'public/') === 0 || strpos($rutaCodificada, $prefijoNormalizado) === 0) {
             return $rutaCodificada;
@@ -83,15 +107,9 @@ if (!function_exists('preparar_ruta_publica')) {
                         </div>
                         <div class="card-body">
                             <?php
-                            $fotoPerfil = $detalle['fotoPerfil'] ?? '';
-                            $rutaFoto = '';
-                            if (!empty($fotoPerfil)) {
-                                if (preg_match('/^https?:\/\//i', $fotoPerfil)) {
-                                    $rutaFoto = $fotoPerfil;
-                                } else {
-                                    $segmentosFoto = array_map('rawurlencode', array_filter(explode('/', ltrim($fotoPerfil, '/')), 'strlen'));
-                                    $rutaFoto = 'public/fotos/' . implode('/', $segmentosFoto);
-                                }
+                            $rutaFoto = preparar_ruta_publica($detalle['fotoPerfil'] ?? '', 'public/fotos/');
+                            if ($rutaFoto !== '' && !preg_match('/^https?:\/\//i', $rutaFoto)) {
+                                $rutaFoto = '/' . ltrim($rutaFoto, '/');
                             }
                             ?>
                             <?php if (!empty($rutaFoto)): ?>
@@ -154,7 +172,6 @@ if (!function_exists('preparar_ruta_publica')) {
                                             <thead>
                                                 <tr>
                                                     <th>Archivo</th>
-                                                    <th>Ruta</th>
                                                     <th class="text-end">Fecha</th>
                                                 </tr>
                                             </thead>
@@ -177,7 +194,6 @@ if (!function_exists('preparar_ruta_publica')) {
                                                                     class="fas fa-file-arrow-down me-2"></i><?= htmlspecialchars(basename($rutaOriginalCV)) ?>
                                                             </a>
                                                         </td>
-                                                        <td class="small text-muted"><?= htmlspecialchars($rutaNormalizada) ?></td>
                                                         <td class="text-end">
                                                             <?php if ($fechaFormateada): ?>
                                                                 <span class="badge bg-light text-muted">
