@@ -1,6 +1,6 @@
 <style>
     body {
-        overflow: hidden;
+        overflow-x: hidden;
         margin: 0;
         padding: 0;
     }
@@ -194,6 +194,13 @@
         position: absolute;
         z-index: 0;
     }
+    .rainbow, .h, .v {
+    pointer-events: none;
+}
+    
+
+
+
 </style>
 </head>
 
