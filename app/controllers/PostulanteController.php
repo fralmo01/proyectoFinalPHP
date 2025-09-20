@@ -12,12 +12,29 @@ class PostulanteController
         if (session_status() === PHP_SESSION_NONE) session_start();
         $convModel = new Convocatoria();
 
-        $convocatorias = $convModel->listarActivas();
+        $modalidades = $convModel->listarModalidades();
+        $jornadas = $convModel->listarJornadas();
+
+        $idModalidad = isset($_GET['modalidad']) && $_GET['modalidad'] !== ''
+            ? (int) $_GET['modalidad']
+            : null;
+
+        $idJornada = isset($_GET['jornada']) && $_GET['jornada'] !== ''
+            ? (int) $_GET['jornada']
+            : null;
+
+        $filtros = [
+            'idModalidad' => $idModalidad,
+            'idJornada'   => $idJornada,
+        ];
+
+        $convocatorias = $convModel->listarActivas($filtros);
 
         $detalle = null;
         if (!empty($_GET['idConvocatoria'])) {
+            $idConvocatoria = (int) $_GET['idConvocatoria'];
             foreach ($convocatorias as $c) {
-                if ($c['idConvocatoria'] == $_GET['idConvocatoria']) {
+                if ((int) $c['idConvocatoria'] === $idConvocatoria) {
                     $detalle = $c;
                     break;
                 }

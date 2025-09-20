@@ -4,9 +4,7 @@
         margin: 0;
         padding: 0;
         position: relative;
-        /* Necesario para manejar bien los z-index */
-        background: #fff;
-        /* fondo base blanco */
+         background: #fff;
     }
 
     .rainbow {
