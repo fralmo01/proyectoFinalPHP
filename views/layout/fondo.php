@@ -3,6 +3,10 @@
         overflow-x: hidden;
         margin: 0;
         padding: 0;
+        position: relative;
+        /* Necesario para manejar bien los z-index */
+        background: #fff;
+        /* fondo base blanco */
     }
 
     .rainbow {
@@ -13,6 +17,7 @@
         transform: rotate(10deg);
         transform-origin: top right;
         z-index: 0;
+
     }
 
     .rainbow:nth-child(1) {
@@ -194,13 +199,12 @@
         position: absolute;
         z-index: 0;
     }
-    .rainbow, .h, .v {
-    pointer-events: none;
-}
-    
 
-
-
+    .rainbow,
+    .h,
+    .v {
+        pointer-events: none;
+    }
 </style>
 </head>
 

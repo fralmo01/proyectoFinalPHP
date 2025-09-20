@@ -185,7 +185,32 @@
         header('Location: index.php?controller=empresa&action=home&error=delete');
         exit;
     }
- 
+
+    public function listar()
+    {
+        $convModel = new Convocatoria();
+
+        $modalidades = $convModel->listarModalidades();
+        $jornadas = $convModel->listarJornadas();
+
+        $idModalidad = isset($_GET['modalidad']) && $_GET['modalidad'] !== ''
+            ? (int) $_GET['modalidad']
+            : null;
+
+        $idJornada = isset($_GET['jornada']) && $_GET['jornada'] !== ''
+            ? (int) $_GET['jornada']
+            : null;
+
+        $filtros = [
+            'idModalidad' => $idModalidad,
+            'idJornada'   => $idJornada,
+        ];
+
+        $convocatorias = $convModel->listarActivas($filtros);
+
+        require_once __DIR__ . '/../../views/vistas/listConvocatoria.php';
+    }
+
      public function listarPorEmpresa()
      {
         if (session_status() === PHP_SESSION_NONE) {

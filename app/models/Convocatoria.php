@@ -50,10 +50,48 @@ class Convocatoria
         return $rows ?: [];
     }
 
-    public function listarActivas()
+    public function listarActivas(array $filtros = [])
     {
+        /* BORRRA ESTE PROCEDMIMIENTO ALMACENADO
         $sql = "CALL sp_listar_convocatorias_activas()";
-        $stmt = $this->pdo->query($sql);
+        */
+        $sql = "SELECT 
+                    c.idConvocatoria,
+                    c.titulo,
+                    c.descripcion,
+                    c.fechaInicio,
+                    c.fechaFin,
+                    c.estado,
+                    c.idEmpresa,
+                    c.idJornada,
+                    c.idModalidad,
+                    e.nombre AS empresaNombre,
+                    e.logoEmpresa,
+                    j.nombreJornada,
+                    m.nombreModalidad
+                FROM Convocatorias c
+                INNER JOIN Empresas e ON c.idEmpresa = e.idEmpresa
+                INNER JOIN Jornadas j ON c.idJornada = j.idJornada
+                INNER JOIN Modalidades m ON c.idModalidad = m.idModalidad
+                WHERE c.estado = 1
+                  AND c.fechaFin >= CURDATE()";
+
+        $params = [];
+
+        if (!empty($filtros['idModalidad'])) {
+            $sql .= " AND c.idModalidad = ?";
+            $params[] = $filtros['idModalidad'];
+        }
+
+        if (!empty($filtros['idJornada'])) {
+            $sql .= " AND c.idJornada = ?";
+            $params[] = $filtros['idJornada'];
+        }
+
+        $sql .= " ORDER BY c.fechaCreacion DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $stmt->closeCursor();
         return $rows ?: [];
