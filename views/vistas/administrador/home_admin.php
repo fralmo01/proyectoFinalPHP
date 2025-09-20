@@ -1,9 +1,12 @@
-<h2>Panel de Administración</h2>
-<p>Gestión completa del sistema.</p>
-
-<ul>
-    <li><a href="index.php?controller=usuario&action=listar">Gestionar Usuarios</a></li>
-    <li><a href="index.php?controller=empresa&action=listar">Gestionar Empresas</a></li>
-    <li><a href="index.php?controller=convocatoria&action=listar">Gestionar Convocatorias</a></li>
-    <li><a href="index.php?controller=usuario&action=logout">Cerrar Sesión</a></li>
-</ul>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <?php include __DIR__ . "/../../layout/fondo.php"; ?>
+    <?php include __DIR__ . "/../../layout/menu_Administrador.php"; ?>
+    
+</body>
+</html>

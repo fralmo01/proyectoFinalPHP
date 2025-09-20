@@ -73,10 +73,30 @@
     .form-container a:hover {
         text-decoration: underline;
     }
+
+    .back-home {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 20px;
+        color: #ff6699;
+        font-weight: 600;
+        text-decoration: none;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .back-home:hover {
+        color: #ff4d88;
+        transform: translateX(-2px);
+        text-decoration: none;
+    }
 </style>
 
 <div class="form-container">
     <h2>Iniciar Sesión</h2>
+    <a class="back-home" href="index.php?controller=home&action=index">
+        &#8592; Volver al inicio
+    </a>
     <form method="POST" action="index.php?controller=usuario&action=auth">
         <input type="text" name="usuario" placeholder="Usuario" required><br>
         <input type="password" name="clave" placeholder="Contraseña" required><br>
