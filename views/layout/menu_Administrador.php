@@ -200,31 +200,44 @@ $emailAdmin = $_SESSION['email'] ?? '';
     </div>
 
     <ul class="admin-nav">
-        <li>
-            <a href="index.php?controller=admin&action=dashboard">
-                <span class="icon">🏠</span>
-                Inicio
-            </a>
-        </li>
-        <li>
-            <a href="#">
-                <span class="icon">👥</span>
-                Gestionar Usuarios
-            </a>
-        </li>
-        <li>
-            <a href="#">
-                <span class="icon">🏢</span>
-                Gestionar Empresas
-            </a>
-        </li>
-        <li>
-            <a href="#">
-                <span class="icon">🗂️</span>
-                Gestionar Convocatorias
-            </a>
-        </li>
-    </ul>
+    <li>
+        <a href="index.php?controller=admin&action=dashboard">
+            <span class="icon">🏠</span>
+            Inicio
+        </a>
+    </li>
+    <li>
+        <a href="index.php?controller=admin&action=usuarios">
+            <span class="icon">👥</span>
+            Gestión de Usuarios
+        </a>
+    </li>
+    <li>
+        <a href="index.php?controller=admin&action=empresas">
+            <span class="icon">🏢</span>
+            Gestión de Empresas
+        </a>
+    </li>
+    <li>
+        <a href="index.php?controller=admin&action=convocatorias">
+            <span class="icon">🗂️</span>
+            Gestión de Convocatorias
+        </a>
+    </li>
+    <li>
+        <a href="index.php?controller=admin&action=catalogo">
+            <span class="icon">⚙️</span>
+            Gestión de Catálogo
+        </a>
+    </li>
+    <li>
+        <a href="index.php?controller=admin&action=reportes">
+            <span class="icon">📊</span>
+            Reportes
+        </a>
+    </li>
+</ul>
+
 
     <div class="admin-sidebar-footer">
         <a href="index.php?controller=usuario&action=logout">
