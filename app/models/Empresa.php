@@ -33,4 +33,15 @@ class Empresa
         $stmt->execute([$idEmpresa]);
         return $stmt->fetch();
     }
+
+    public function listarActivas(): array
+    {
+        $sql = "SELECT idEmpresa, nombre
+                FROM Empresas
+                WHERE estado = 1
+                ORDER BY nombre";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

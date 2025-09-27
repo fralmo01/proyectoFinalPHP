@@ -14,7 +14,7 @@
         position: absolute;
         transform: rotate(10deg);
         transform-origin: top right;
-        z-index: 0;
+        z-index: -1;
 
     }
 
@@ -185,7 +185,7 @@
         bottom: 0;
         left: 0;
         position: absolute;
-        z-index: 0;
+        z-index: -1;
     }
 
     .v {
@@ -195,7 +195,7 @@
         bottom: 0;
         left: 0;
         position: absolute;
-        z-index: 0;
+        z-index: -1;
     }
 
     .rainbow,
