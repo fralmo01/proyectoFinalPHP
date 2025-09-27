@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../models/Usuario.php';
 require_once __DIR__ . '/../models/Rol.php';
 require_once __DIR__ . '/../models/Empresa.php';
+require_once __DIR__ . '/../models/Convocatoria.php';
 
 class AdminController
 {
@@ -15,6 +16,181 @@ class AdminController
     public function dashboard()
     {
         require_once __DIR__ . '/../../views/vistas/administrador/home_admin.php';
+    }
+
+    public function empresas()
+    {
+        $this->ensureSession();
+
+        $empresaModel = new Empresa();
+
+        $categoriaFiltro = isset($_GET['categoria']) ? trim((string) $_GET['categoria']) : 'todas';
+        $estadoFiltro = isset($_GET['estado']) ? trim((string) $_GET['estado']) : 'activos';
+
+        $estadosPermitidos = ['activos', 'inactivos', 'todos'];
+        if (!in_array($estadoFiltro, $estadosPermitidos, true)) {
+            $estadoFiltro = 'activos';
+        }
+
+        $categorias = $empresaModel->obtenerCategorias();
+        if ($categoriaFiltro !== 'todas' && !in_array($categoriaFiltro, $categorias, true)) {
+            $categoriaFiltro = 'todas';
+        }
+
+        $empresas = $empresaModel->listarEmpresas($categoriaFiltro, $estadoFiltro);
+
+        $mensaje = $_GET['mensaje'] ?? null;
+        $error = $_GET['error'] ?? null;
+
+        require_once __DIR__ . '/../../views/vistas/administrador/empresas.php';
+    }
+
+    public function convocatorias(): void
+    {
+        $this->ensureSession();
+
+        $convocatoriaModel = new Convocatoria();
+
+        $modalidades = $convocatoriaModel->listarModalidades();
+        $jornadas = $convocatoriaModel->listarJornadas();
+
+        $idModalidad = isset($_GET['modalidad']) && $_GET['modalidad'] !== ''
+            ? (int) $_GET['modalidad']
+            : null;
+        $idJornada = isset($_GET['jornada']) && $_GET['jornada'] !== ''
+            ? (int) $_GET['jornada']
+            : null;
+        $estadoFiltro = isset($_GET['estado']) && $_GET['estado'] !== ''
+            ? (int) $_GET['estado']
+            : '';
+        $buscar = trim($_GET['buscar'] ?? '');
+
+        $filtros = [
+            'idModalidad' => $idModalidad,
+            'idJornada'   => $idJornada,
+            'estado'      => $estadoFiltro === '' ? null : $estadoFiltro,
+            'buscar'      => $buscar !== '' ? $buscar : null,
+        ];
+
+        $convocatorias = $convocatoriaModel->listarParaAdmin($filtros);
+
+        $mensaje = $_GET['mensaje'] ?? null;
+        $error = $_GET['error'] ?? null;
+
+        require_once __DIR__ . '/../../views/vistas/administrador/convocatorias.php';
+    }
+
+    public function actualizarEstadoConvocatoria(): void
+    {
+        $this->ensureSession();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?controller=admin&action=convocatorias');
+            exit;
+        }
+
+        $idConvocatoria = isset($_POST['idConvocatoria']) ? (int) $_POST['idConvocatoria'] : 0;
+        $estado = $_POST['estado'] ?? '';
+
+        if ($idConvocatoria <= 0 || !in_array($estado, ['0', '1'], true)) {
+            header('Location: index.php?controller=admin&action=convocatorias&error=Solicitud+inv%C3%A1lida');
+            exit;
+        }
+
+        $estadoNuevo = (int) $estado;
+
+        $convocatoriaModel = new Convocatoria();
+        $resultado = $convocatoriaModel->cambiarEstado($idConvocatoria, $estadoNuevo, $_SESSION['idUsuario'] ?? null);
+
+        $params = [];
+
+        $modalidadFiltro = $_POST['f_modalidad'] ?? '';
+        $jornadaFiltro = $_POST['f_jornada'] ?? '';
+        $estadoFiltro = $_POST['f_estado'] ?? '';
+        $buscarFiltro = trim($_POST['f_buscar'] ?? '');
+
+        if ($modalidadFiltro !== '') {
+            $params['modalidad'] = (int) $modalidadFiltro;
+        }
+
+        if ($jornadaFiltro !== '') {
+            $params['jornada'] = (int) $jornadaFiltro;
+        }
+
+        if ($estadoFiltro !== '') {
+            $params['estado'] = (int) $estadoFiltro;
+        }
+
+        if ($buscarFiltro !== '') {
+            $params['buscar'] = $buscarFiltro;
+        }
+
+        $redirect = 'index.php?controller=admin&action=convocatorias';
+
+        if ($resultado) {
+            $accion = $estadoNuevo === 1 ? 'Activó convocatoria' : 'Desactivó convocatoria';
+            $usuarioAuditoria = $_SESSION['idUsuario'] ?? null;
+
+            if (!empty($usuarioAuditoria)) {
+                $usuarioModel = new Usuario();
+                $usuarioModel->registrarHistorial($usuarioAuditoria, $accion, 'Convocatorias', $idConvocatoria);
+            }
+
+            $params['mensaje'] = 'Estado actualizado correctamente';
+        } else {
+            $params['error'] = 'No se pudo actualizar el estado de la convocatoria';
+        }
+
+        if (!empty($params)) {
+            $redirect .= '&' . http_build_query($params);
+        }
+
+        header('Location: ' . $redirect);
+        exit;
+    }
+
+    public function cambiarEstadoEmpresa()
+    {
+        $this->ensureSession();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?controller=admin&action=empresas');
+            exit;
+        }
+
+        $idEmpresa = (int) ($_POST['idEmpresa'] ?? 0);
+        $accion = $_POST['accion'] ?? '';
+
+        $estado = null;
+        if ($accion === 'activar') {
+            $estado = 1;
+        } elseif ($accion === 'desactivar') {
+            $estado = 0;
+        }
+
+        if ($idEmpresa <= 0 || $estado === null) {
+            header('Location: index.php?controller=admin&action=empresas&error=' . urlencode('Solicitud inválida.'));
+            exit;
+        }
+
+        $empresaModel = new Empresa();
+        $usuarioModel = new Usuario();
+
+        $resultado = $empresaModel->actualizarEstado($idEmpresa, $estado, $_SESSION['idUsuario'] ?? null);
+
+        if ($resultado && !empty($_SESSION['idUsuario'])) {
+            $accionHistorial = $estado === 1 ? 'Activó empresa' : 'Desactivó empresa';
+            $usuarioModel->registrarHistorial($_SESSION['idUsuario'], $accionHistorial, 'Empresas', $idEmpresa);
+        }
+
+        if ($resultado) {
+            $mensaje = $estado === 1 ? 'Empresa activada correctamente.' : 'Empresa desactivada correctamente.';
+            header('Location: index.php?controller=admin&action=empresas&mensaje=' . urlencode($mensaje));
+            exit;
+        }
+
+        header('Location: index.php?controller=admin&action=empresas&error=' . urlencode('No se pudo actualizar el estado de la empresa.'));
+        exit;
     }
 
     public function usuarios()

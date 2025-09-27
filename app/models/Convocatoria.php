@@ -97,6 +97,60 @@ class Convocatoria
         return $rows ?: [];
     }
 
+    public function listarParaAdmin(array $filtros = []): array
+    {
+        $sql = "SELECT
+                    c.idConvocatoria,
+                    c.titulo,
+                    c.descripcion,
+                    c.fechaInicio,
+                    c.fechaFin,
+                    c.estado,
+                    c.fechaCreacion,
+                    e.nombre AS empresaNombre,
+                    e.logoEmpresa,
+                    j.nombreJornada,
+                    m.nombreModalidad
+                FROM Convocatorias c
+                INNER JOIN Empresas e ON c.idEmpresa = e.idEmpresa
+                INNER JOIN Jornadas j ON c.idJornada = j.idJornada
+                INNER JOIN Modalidades m ON c.idModalidad = m.idModalidad
+                WHERE 1 = 1";
+
+        $params = [];
+
+        if (!empty($filtros['idModalidad'])) {
+            $sql .= " AND c.idModalidad = ?";
+            $params[] = $filtros['idModalidad'];
+        }
+
+        if (!empty($filtros['idJornada'])) {
+            $sql .= " AND c.idJornada = ?";
+            $params[] = $filtros['idJornada'];
+        }
+
+        if (isset($filtros['estado']) && $filtros['estado'] !== '' && $filtros['estado'] !== null) {
+            $sql .= " AND c.estado = ?";
+            $params[] = (int) $filtros['estado'];
+        }
+
+        if (!empty($filtros['buscar'])) {
+            $sql .= " AND (c.titulo LIKE ? OR e.nombre LIKE ?)";
+            $termino = '%' . $filtros['buscar'] . '%';
+            $params[] = $termino;
+            $params[] = $termino;
+        }
+
+        $sql .= " ORDER BY c.fechaCreacion DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+
+        return $rows ?: [];
+    }
+
     public function obtenerPorId($idConvocatoria, $idEmpresa)
     {
         $sql = "SELECT c.idConvocatoria, c.titulo, c.descripcion, c.fechaInicio, c.fechaFin,
@@ -154,6 +208,22 @@ class Convocatoria
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$idUsuario, $idConvocatoria, $idEmpresa]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    public function cambiarEstado(int $idConvocatoria, int $estado, ?int $idUsuario): bool
+    {
+        $estadoNormalizado = $estado === 1 ? 1 : 0;
+
+        $sql = "UPDATE Convocatorias
+                SET estado = ?,
+                    usuarioActualizacion = ?,
+                    fechaActualizacion = NOW()
+                WHERE idConvocatoria = ?";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$estadoNormalizado, $idUsuario, $idConvocatoria]);
 
         return $stmt->rowCount() > 0;
     }
