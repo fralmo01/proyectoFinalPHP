@@ -20,20 +20,27 @@ $emailAdmin = $_SESSION['email'] ?? '';
 
     .admin-menu-toggle {
         position: fixed;
-        top: 20px;
-        left: 20px;
-        background: linear-gradient(135deg, #5a3fef, #8f6bff);
+        top: 24px;
+        left: 24px;
+        background: linear-gradient(135deg, rgba(96, 165, 250, 0.95), rgba(99, 102, 241, 0.95));
         color: #fff;
         border: none;
-        border-radius: 12px;
-        padding: 10px 16px;
+        border-radius: 14px;
+        padding: 12px 18px;
         font-weight: 600;
         cursor: pointer;
-        box-shadow: 0 10px 30px rgba(90, 63, 239, 0.25);
+        box-shadow: 0 12px 32px rgba(99, 102, 241, 0.35);
         z-index: 950;
         display: none;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        letter-spacing: 0.4px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .admin-menu-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 34px rgba(99, 102, 241, 0.45);
     }
 
     .admin-menu-toggle span {
@@ -45,7 +52,7 @@ $emailAdmin = $_SESSION['email'] ?? '';
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(15, 23, 42, 0.45);
+        background: rgba(15, 23, 42, 0.4);
         z-index: 940;
     }
 
@@ -59,7 +66,7 @@ $emailAdmin = $_SESSION['email'] ?? '';
         left: 0;
         height: 100vh;
         width: var(--admin-sidebar-width);
-        background: linear-gradient(180deg, #312e81 0%, #4338ca 55%, #6366f1 100%);
+        background: linear-gradient(180deg, rgba(49, 46, 129, 0.94) 0%, rgba(99, 102, 241, 0.9) 55%, rgba(232, 121, 249, 0.9) 100%);
         color: #f8fafc;
         display: flex;
         flex-direction: column;
@@ -71,24 +78,25 @@ $emailAdmin = $_SESSION['email'] ?? '';
     .admin-sidebar .brand {
         font-size: 22px;
         font-weight: 700;
-        margin-bottom: 30px;
-        letter-spacing: 0.5px;
+        margin-bottom: 32px;
+        letter-spacing: 0.6px;
     }
 
     .admin-sidebar .brand span {
         display: block;
         font-size: 13px;
         font-weight: 500;
-        opacity: 0.75;
-        margin-top: 4px;
+        opacity: 0.8;
+        margin-top: 6px;
     }
 
     .admin-profile-box {
-        background: rgba(255, 255, 255, 0.12);
-        border-radius: 16px;
-        padding: 18px;
-        margin-bottom: 28px;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(6px);
     }
 
     .admin-profile-box .name {
@@ -109,37 +117,29 @@ $emailAdmin = $_SESSION['email'] ?? '';
         margin: 0;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
         flex: 1;
     }
 
     .admin-nav a {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 12px 14px;
-        border-radius: 12px;
+        display: block;
+        padding: 14px 16px;
+        border-radius: 14px;
         color: #f8fafc;
         text-decoration: none;
-        font-weight: 500;
-        transition: background 0.2s ease, transform 0.2s ease;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        background: rgba(15, 23, 42, 0.12);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
     }
 
-    .admin-nav a:hover {
-        background: rgba(255, 255, 255, 0.18);
-        transform: translateX(6px);
-    }
-
-    .admin-nav a .icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 255, 255, 0.2);
-        font-weight: 700;
-        font-size: 14px;
+    .admin-nav a:hover,
+    .admin-nav a:focus {
+        background: rgba(255, 255, 255, 0.22);
+        transform: translateX(8px);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.25);
     }
 
     .admin-sidebar-footer {
@@ -147,21 +147,20 @@ $emailAdmin = $_SESSION['email'] ?? '';
     }
 
     .admin-sidebar-footer a {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 11px 14px;
-        border-radius: 12px;
+        display: inline-block;
+        padding: 40px 30px;
+        border-radius: 14px;
         text-decoration: none;
         color: #0f172a;
         background: #f8fafc;
         font-weight: 600;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        letter-spacing: 0.3px;
     }
 
     .admin-sidebar-footer a:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 25px rgba(15, 23, 42, 0.22);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.25);
     }
 
     @media (max-width: 900px) {
@@ -200,41 +199,26 @@ $emailAdmin = $_SESSION['email'] ?? '';
     </div>
 
     <ul class="admin-nav">
-    <li>
-        <a href="index.php?controller=admin&action=dashboard">
-            <span class="icon">🏠</span>
-            Inicio
-        </a>
-    </li>
-    <li>
-        <a href="index.php?controller=admin&action=usuarios">
-            <span class="icon">👥</span>
-            Gestión de Usuarios
-        </a>
-    </li>
-    <li>
-        <a href="index.php?controller=admin&action=empresas">
-            <span class="icon">🏢</span>
-            Gestión de Empresas
-        </a>
-    </li>
-    <li>
-        <a href="index.php?controller=admin&action=convocatorias">
-            <span class="icon">🗂️</span>
-            Gestión de Convocatorias
-        </a>
-    </li>
-    <li>
-        <a href="index.php?controller=admin&action=reportes">
-            <span class="icon">📊</span>
-            Reportes
-        </a>
-    </li>
-    <li>
-        <a href="index.php?controller=usuario&action=logout">
-            <span></span> Cerrar Sesión
-        </a>
-    </li>
+        <li>
+            <a href="index.php?controller=admin&action=dashboard">Inicio</a>
+        </li>
+        <li>
+            <a href="index.php?controller=admin&action=usuarios">Gestión de Usuarios</a>
+        </li>
+        <li>
+            <a href="index.php?controller=admin&action=empresas">Gestión de Empresas</a>
+        </li>
+        <li>
+            <a href="index.php?controller=admin&action=convocatorias">Gestión de Convocatorias</a>
+        </li>
+        <li>
+            <a href="index.php?controller=admin&action=reportes">Reportes</a>
+        </li>
+    </ul>
+
+    <div class="admin-sidebar-footer">
+        <a href="index.php?controller=usuario&action=logout">Cerrar sesión</a>
+    </div>
 </aside>
 
 <script>
