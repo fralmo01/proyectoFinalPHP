@@ -4,6 +4,9 @@ require_once __DIR__ . '/../models/Rol.php';
 require_once __DIR__ . '/../models/Empresa.php';
 require_once __DIR__ . '/../models/Convocatoria.php';
 require_once __DIR__ . '/../models/Historial.php';
+require_once __DIR__ . '/../librerias/Loader.php';
+
+use Librerias\Loader;
 
 class AdminController
 {
@@ -84,13 +87,10 @@ class AdminController
         $historialModel = new Historial();
         $historial = $historialModel->obtenerHistorial($fechaInicio, $fechaFin);
 
-        $bootstrapPath = __DIR__ . '/../libreria/PhpSpreadsheet-5.1.0/src/Bootstrap.php';
-        if (!file_exists($bootstrapPath)) {
-            header('Location: index.php?controller=admin&action=reportes&error=No+se+encontr%C3%B3+PhpSpreadsheet');
+        if (!Loader::cargarPhpSpreadsheet()) {
+            header('Location: index.php?controller=admin&action=reportes&error=PhpSpreadsheet+no+est%C3%A1+disponible');
             exit;
         }
-
-        require_once $bootstrapPath;
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $spreadsheet->getProperties()
@@ -163,14 +163,7 @@ class AdminController
             exit;
         }
 
-        $dompdfBootstrap = __DIR__ . '/../libreria/dompdf-3.1.2/vendor/autoload.php';
-        if (file_exists($dompdfBootstrap)) {
-            require_once $dompdfBootstrap;
-        } else {
-            $this->registrarAutoloadDompdf();
-        }
-
-        if (!class_exists(\Dompdf\Dompdf::class)) {
+        if (!Loader::cargarDompdf()) {
             header('Location: index.php?controller=admin&action=reportes&error=Dompdf+no+est%C3%A1+disponible');
             exit;
         }
@@ -191,65 +184,6 @@ class AdminController
         $dompdf->render();
         $dompdf->stream('grafico_historial.pdf');
         exit;
-    }
-
-    private function registrarAutoloadDompdf(): void
-    {
-        $basePath = __DIR__ . '/../libreria/dompdf-3.1.2';
-
-        if (!is_dir($basePath)) {
-            return;
-        }
-
-        spl_autoload_register(static function ($class) use ($basePath) {
-            $prefixes = [
-                'Dompdf\\' => $basePath . '/src/',
-                'Dompdf\\Tests\\' => $basePath . '/tests/',
-            ];
-
-            foreach ($prefixes as $prefix => $dir) {
-                $len = strlen($prefix);
-                if (strncmp($prefix, $class, $len) !== 0) {
-                    continue;
-                }
-
-                $relativeClass = substr($class, $len);
-                $file = $dir . str_replace('\\', '/', $relativeClass) . '.php';
-
-                if (file_exists($file)) {
-                    require_once $file;
-                    return;
-                }
-            }
-
-            if ($class === 'FontLib\\Autoloader') {
-                $archivo = $basePath . '/lib/php-font-lib/src/FontLib/Autoloader.php';
-                if (file_exists($archivo)) {
-                    require_once $archivo;
-                }
-                return;
-            }
-
-            $extraPrefixes = [
-                'FontLib\\' => $basePath . '/lib/php-font-lib/src/',
-                'Svg\\' => $basePath . '/lib/php-svg-lib/src/',
-                'Masterminds\\HTML5\\' => $basePath . '/lib/html5-php/src/HTML5/',
-            ];
-
-            foreach ($extraPrefixes as $prefix => $dir) {
-                $len = strlen($prefix);
-                if (strncmp($prefix, $class, $len) !== 0) {
-                    continue;
-                }
-
-                $relativeClass = substr($class, $len);
-                $file = $dir . str_replace('\\', '/', $relativeClass) . '.php';
-                if (file_exists($file)) {
-                    require_once $file;
-                }
-                return;
-            }
-        }, true, true);
     }
 
     public function empresas()

@@ -225,25 +225,16 @@ $emailAdmin = $_SESSION['email'] ?? '';
         </a>
     </li>
     <li>
-        <a href="index.php?controller=admin&action=catalogo">
-            <span class="icon">⚙️</span>
-            Gestión de Catálogo
-        </a>
-    </li>
-    <li>
         <a href="index.php?controller=admin&action=reportes">
             <span class="icon">📊</span>
             Reportes
         </a>
     </li>
-</ul>
-
-
-    <div class="admin-sidebar-footer">
+    <li>
         <a href="index.php?controller=usuario&action=logout">
-            <span>⏏️</span> Cerrar Sesión
+            <span></span> Cerrar Sesión
         </a>
-    </div>
+    </li>
 </aside>
 
 <script>

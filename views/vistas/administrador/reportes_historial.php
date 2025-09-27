@@ -211,12 +211,7 @@ $error = $error ?? null;
 
     <main class="admin-main">
         <section class="report-header">
-            <h1>Reportes del Historial</h1>
-            <p class="note-libraries">
-                Las librerías externas Dompdf y PhpSpreadsheet se encuentran disponibles en la carpeta
-                <strong>app/libreria/</strong> (también referida como <strong>app/librerias/</strong>) del proyecto, dedicada a
-                las dependencias externas.
-            </p>
+            <h1 style="text-align: center;" >Reportes del Historial</h1>
             <div class="report-actions">
                 <form class="report-filter" method="get" action="index.php">
                     <input type="hidden" name="controller" value="admin">
